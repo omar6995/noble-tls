@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+When creating new functions, always add the documentation of the function along the input parameters , what the function does and the output parameters

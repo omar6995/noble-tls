@@ -119,7 +119,9 @@ class Session:
         # ECDSAWithP521AndSHA512
         # PKCS1WithSHA1
         # ECDSAWithSHA1
-        #
+        # Ed25519
+        # SHA224_RSA
+        # SHA224_ECDSA
         # Example:
         # [
         #     "ECDSAWithP256AndSHA256",
@@ -146,7 +148,9 @@ class Session:
         # ECDSAWithP521AndSHA512
         # PKCS1WithSHA1
         # ECDSAWithSHA1
-        #
+        # Ed25519
+        # SHA224_RSA
+        # SHA224_ECDSA
         # Example:
         # [
         #     "ECDSAWithP256AndSHA256",
@@ -183,7 +187,11 @@ class Session:
         # P384
         # P521
         # X25519
-        #
+        # P256Kyber768
+        # X25519Kyber512D
+        # X25519Kyber768
+        # X25519Kyber768Old
+        # X25519MLKEM768
         # Example:
         # [
         #     "GREASE",
@@ -404,11 +412,13 @@ class Session:
                     "connectionFlow": self.connection_flow,
                     "priorityFrames": self.priority_frames,
                     "headerPriority": self.header_priority,
-                    "certCompressionAlgo": self.cert_compression_algo,
+                    "certCompressionAlgos": [self.cert_compression_algo],
                     "supportedVersions": self.supported_versions,
                     "supportedSignatureAlgorithms": self.supported_signature_algorithms,
                     "supportedDelegatedCredentialsAlgorithms": self.supported_delegated_credentials_algorithms,
                     "keyShareCurves": self.key_share_curves,
+                    "alpnProtocols": ['h2','http/1.1'],
+                    'alpsProtocols': ['h2']
                 }
             else:
                 request_payload["tlsClientIdentifier"] = self.client_identifier
