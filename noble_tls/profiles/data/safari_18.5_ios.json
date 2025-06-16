@@ -1,16 +1,16 @@
 {
-  "name": "safari_18.3_ios",
+  "name": "safari_18.5_ios",
   "type": "safari",
   "random_tls_extension_order": false,
   "tls.peet.ws": {
     "donate": "Please consider donating to keep this API running. Visit https://tls.peet.ws",
-    "ip": "85.209.178.87:62197",
+    "ip": "204.14.77.60:62774",
     "http_version": "h2",
     "method": "GET",
-    "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Mobile/15E148 Safari/604.1",
+    "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",
     "tls": {
       "ciphers": [
-        "TLS_GREASE (0xAAAA)",
+        "TLS_GREASE (0x2A2A)",
         "TLS_AES_128_GCM_SHA256",
         "TLS_AES_256_GCM_SHA384",
         "TLS_CHACHA20_POLY1305_SHA256",
@@ -34,7 +34,7 @@
       ],
       "extensions": [
         {
-          "name": "TLS_GREASE (0x7a7a)"
+          "name": "TLS_GREASE (0x5a5a)"
         },
         {
           "name": "server_name (0)",
@@ -52,7 +52,7 @@
         {
           "name": "supported_groups (10)",
           "supported_groups": [
-            "TLS_GREASE (0x7a7a)",
+            "TLS_GREASE (0x5a5a)",
             "X25519 (29)",
             "P-256 (23)",
             "P-384 (24)",
@@ -97,10 +97,10 @@
           "name": "key_share (51)",
           "shared_keys": [
             {
-              "TLS_GREASE (0x7a7a)": "00"
+              "TLS_GREASE (0x5a5a)": "00"
             },
             {
-              "X25519 (29)": "ec87d80569838247e9aa3caaeaae1b5863d4ee297685f29b3e79e3f5b76ec008"
+              "X25519 (29)": "909b1a89ebed61cb263c1eea9d413e4c59370dbe77f63591d54fb1b2a6cc315b"
             }
           ]
         },
@@ -123,7 +123,7 @@
           "algorithms": ["zlib (1)"]
         },
         {
-          "name": "TLS_GREASE (0x6a6a)"
+          "name": "TLS_GREASE (0x0a0a)"
         },
         {
           "name": "padding (21)",
@@ -132,27 +132,26 @@
       ],
       "tls_version_record": "771",
       "tls_version_negotiated": "772",
-      "ja3": "771,2570-4865-4866-4867-49196-49195-52393-49200-49199-52392-49162-49161-49172-49171-157-156-53-47-49160-49170-10,2570-0-23-65281-10-11-16-5-13-18-51-45-43-27-21-2570,2570-29-23-24-25,0",
+      "ja3": "771,4865-4866-4867-49196-49195-52393-49200-49199-52392-49162-49161-49172-49171-157-156-53-47-49160-49170-10,0-23-65281-10-11-16-5-13-18-51-45-43-27-21,29-23-24-25,0",
       "ja3_hash": "773906b0efdefa24a7f2b8eb6985bf37",
-      "ja4": "t13d2014h2_a09f3c656075_6b9292cd260b",
-      "ja4_r": "t13d2014h2_000a,002f,0035,009c,009d,1301,1302,1303,c008,c009,c00a,c012,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0005,000a,000b,000d,0012,0015,0015,0017,001b,002b,002d,0033,ff01_0403,0804,0401,0503,0805,0805,0501,0806,0601,0201",
+      "ja4": "t13d2014h2_a09f3c656075_8c54e8d281eb",
+      "ja4_r": "t13d2014h2_000a,002f,0035,009c,009d,1301,1302,1303,c008,c009,c00a,c012,c013,c014,c02b,c02c,c02f,c030,cca8,cca9_0000,0005,000a,000b,000d,0012,0015,0017,001b,002b,002d,0033,ff01_0403,0804,0401,0503,0805,0805,0501,0806,0601,0201",
       "peetprint": "GREASE-772-771-770-769|2-1.1|GREASE-29-23-24-25|1027-2052-1025-1283-2053-2053-1281-2054-1537-513|1|1|GREASE-4865-4866-4867-49196-49195-52393-49200-49199-52392-49162-49161-49172-49171-157-156-53-47-49160-49170-10|0-10-11-13-16-18-21-23-27-43-45-5-51-65281-GREASE-GREASE",
       "peetprint_hash": "fdf2c64009327d63a456cbab56a7bdde",
-      "client_random": "e708914d580002453ce1419d436277e3965c449fe91ab6b9afe2fc2226d37f0a",
-      "session_id": "35d40f212dd0f84a5b061ba69e119179f782f115f6c122871a27b0621c4e9c42"
+      "client_random": "5ed4f8b6daaa9bfce4ac37612dbb4acbadda524d6970315800e76365e2a0b3b6",
+      "session_id": "a3188b5b7cc74e129beccc57570313bd1d6312e38e5a1ddc243b2fa30f4be84b"
     },
     "http2": {
-      "akamai_fingerprint": "2:0;3:100;4:2097152;:1;9:1|10420225|0|m,s,a,p",
-      "akamai_fingerprint_hash": "62317f06028f316631c157c720223e43",
+      "akamai_fingerprint": "2:0;3:100;4:2097152;9:1|10420225|0|m,s,a,p",
+      "akamai_fingerprint_hash": "c52879e43202aeb92740be6e8c86ea96",
       "sent_frames": [
         {
           "frame_type": "SETTINGS",
-          "length": 30,
+          "length": 24,
           "settings": [
             "ENABLE_PUSH = 0",
             "MAX_CONCURRENT_STREAMS = 100",
             "INITIAL_WINDOW_SIZE = 2097152",
-            "UNKNOWN_SETTING_8 = 1",
             "NO_RFC7540_PRIORITIES = 1"
           ]
         },
@@ -171,7 +170,7 @@
             ":authority: tls.peet.ws",
             ":path: /api/all",
             "sec-fetch-dest: document",
-            "user-agent: Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Mobile/15E148 Safari/604.1",
+            "user-agent: Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",
             "accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "sec-fetch-site: none",
             "sec-fetch-mode: navigate",

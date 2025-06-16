@@ -29,7 +29,7 @@ class CustomClient(Enum):
     CHROME_137 = "chrome_137_windows"
     EDGE_137 = "edge_137_windows"
     SAFARI_18_3_IOS = "safari_18.3_ios"
-    
+    SAFARI_18_5_IOS = "safari_18.5_ios"
     # Add more custom profiles here as they become available
     # FIREFOX_132 = "firefox_132_windows"
     # SAFARI_18 = "safari_18_macos"

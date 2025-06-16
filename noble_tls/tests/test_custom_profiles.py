@@ -58,16 +58,13 @@ async def test_chrome_137_profile():
         #valid_session_params['client'] = Client.CHROME_133
         
         #session = Session(**valid_session_params)
-        session = create_session(CustomClient.EDGE_137)
+        session = create_session(CustomClient.CHROME_137)
         # Set User-Agent from profile
         if session_params.get('user_agent'):
             session.headers['User-Agent'] = session_params['user_agent']
         
         print("✅ Session created successfully!")
-        print(f"  Random TLS Extension Order: {getattr(session, 'random_tls_extension_order', 'Not set')}")
-        print(f"  Header Order Length: {len(getattr(session, 'header_order', []))}")
-        print(f"  H2 Settings: {len(getattr(session, 'h2_settings', {}))}")
-        print(f"  User-Agent: {session.headers.get('User-Agent', 'Not set')}")
+       
         
         # Make request to tls.peet.ws API
         print(f"\n🌐 Making request to https://tls.peet.ws/api/all...")
