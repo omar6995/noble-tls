@@ -48,6 +48,14 @@ async def get_latest_release() -> Tuple[str, list]:
             'Accept': 'application/vnd.github.v3+json',
             'User-Agent': 'noble-tls'
         }
+        
+        # Only add token if it exists and is not empty
+        if GITHUB_TOKEN and GITHUB_TOKEN.strip():
+            headers["Authorization"] = f"token {GITHUB_TOKEN}"
+            print(">> Using GitHub token for authentication in get_latest_release.")
+        else:
+            print(">> No GitHub token found, using unauthenticated requests (may hit rate limits)")
+            
         response = await client.get(url, headers=headers)
 
     # Check if the request was successful
@@ -60,8 +68,17 @@ async def get_latest_release() -> Tuple[str, list]:
         # Get assets
         assets = data['assets']
         return version_num, assets
+    elif response.status_code == 403:
+        rate_limit_remaining = response.headers.get('X-RateLimit-Remaining', 'unknown')
+        rate_limit_reset = response.headers.get('X-RateLimit-Reset', 'unknown')
+        error_msg = f"GitHub API rate limit exceeded (403). Remaining: {rate_limit_remaining}, Reset: {rate_limit_reset}"
+        if GITHUB_TOKEN:
+            error_msg += f". Check if your GH_TOKEN has the correct permissions (needs 'repo' or 'public_repo' scope)."
+        else:
+            error_msg += ". Consider setting a GH_TOKEN environment variable to increase rate limits."
+        raise TLSClientException(error_msg)
     else:
-        raise TLSClientException(f"Failed to fetch the latest release. Status code: {response.status_code}")
+        raise TLSClientException(f"Failed to fetch the latest release. Status code: {response.status_code}, Response: {response.text}")
 
 
 async def download_and_save_asset(
