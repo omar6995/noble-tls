@@ -15,18 +15,31 @@ try:
     # Try relative imports first (when used as a package)
     from ..sessions import Session
     from ..utils.identifiers import Client
-    from ..utils.custom_identifiers import CustomClient, custom_client_manager
 except ImportError:
     # Fall back to direct imports (when imported directly)
     # Add the parent directory to the Python path to import noble_tls modules
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
     from sessions import Session
     from utils.identifiers import Client
-    from utils.custom_identifiers import CustomClient, custom_client_manager
+
+
+def _get_custom_imports():
+    """
+    Lazy import function to avoid circular imports.
+    
+    Returns:
+        tuple: CustomClient, custom_client_manager
+    """
+    try:
+        from ..utils.custom_identifiers import CustomClient, get_custom_client_manager
+        return CustomClient, get_custom_client_manager()
+    except ImportError:
+        from utils.custom_identifiers import CustomClient, get_custom_client_manager
+        return CustomClient, get_custom_client_manager()
 
 
 def create_session(
-    client: Optional[Union[Client, CustomClient, str]] = None,
+    client: Optional[Union[Client, "CustomClient", str]] = None,
     **kwargs: Any
 ) -> Session:
     """
@@ -66,6 +79,9 @@ def create_session(
         session = create_session(ja3_string="...", h2_settings={...})
     """
     
+    # Get custom imports when needed
+    CustomClient, custom_client_manager = _get_custom_imports()
+    
     # Handle custom client identifiers
     if isinstance(client, CustomClient):
         # Load parameters for custom client
@@ -104,6 +120,8 @@ def list_all_identifiers() -> dict:
     Returns:
         dict: Dictionary with 'built_in' and 'custom' lists
     """
+    CustomClient, custom_client_manager = _get_custom_imports()
+    
     built_in = [client.value for client in Client]
     custom = list(custom_client_manager.get_available_identifiers().keys())
     
@@ -113,7 +131,7 @@ def list_all_identifiers() -> dict:
     }
 
 
-def get_identifier_info(identifier: Union[Client, CustomClient, str]) -> dict:
+def get_identifier_info(identifier: Union[Client, "CustomClient", str]) -> dict:
     """
     Get information about a specific identifier.
     
@@ -123,10 +141,13 @@ def get_identifier_info(identifier: Union[Client, CustomClient, str]) -> dict:
     Returns:
         dict: Information about the identifier
     """
+    CustomClient, custom_client_manager = _get_custom_imports()
+    
     if isinstance(identifier, CustomClient):
         profile_name = custom_client_manager.get_profile_name(identifier.name)
         if profile_name:
-            profile_info = custom_client_manager.profile_loader.get_profile_info(profile_name)
+            profile_loader = custom_client_manager._get_profile_loader()
+            profile_info = profile_loader.get_profile_info(profile_name)
             return {
                 'type': 'custom',
                 'identifier': identifier.name,
@@ -138,7 +159,8 @@ def get_identifier_info(identifier: Union[Client, CustomClient, str]) -> dict:
         if custom_client_manager.is_custom_identifier(identifier):
             profile_name = custom_client_manager.get_profile_name(identifier)
             if profile_name:
-                profile_info = custom_client_manager.profile_loader.get_profile_info(profile_name)
+                profile_loader = custom_client_manager._get_profile_loader()
+                profile_info = profile_loader.get_profile_info(profile_name)
                 return {
                     'type': 'custom',
                     'identifier': identifier,
@@ -160,6 +182,8 @@ def demo_usage():
     """
     Demonstrate how to use the session factory with different identifier types.
     """
+    CustomClient, custom_client_manager = _get_custom_imports()
+    
     print("Noble TLS Session Factory Demo")
     print("=" * 50)
     
@@ -200,7 +224,7 @@ def demo_usage():
         print("\nCreating session with built-in Client.CHROME_131:")
         session = create_session(Client.CHROME_131)
         print("✓ Session created successfully!")
-        print(f"Client Identifier: {session.client_identifier}")
+        print(f"JA3: {session.ja3_string[:50] if session.ja3_string else 'N/A'}...")
         
     except Exception as e:
         print(f"✗ Error creating session: {e}")

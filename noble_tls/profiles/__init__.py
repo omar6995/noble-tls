@@ -6,17 +6,58 @@ It includes functionality to load profiles from tls.peet.ws JSON files
 and use them with custom client identifiers.
 """
 
-# Use try-except to handle both package and direct imports
+# Import core profile functionality directly
 try:
     # Try relative imports first (when used as a package)
     from .profiles import ProfileLoader, load_profile, list_profiles
-    from ..utils.custom_identifiers import CustomClient, CustomClientManager, custom_client_manager
     from .session_factory import create_session, list_all_identifiers
 except ImportError:
     # Fall back to direct imports (when imported directly)
     from .profiles import ProfileLoader, load_profile, list_profiles
-    from ..utils.custom_identifiers import CustomClient, CustomClientManager, custom_client_manager
     from .session_factory import create_session, list_all_identifiers
+
+
+def _lazy_import_custom_identifiers():
+    """
+    Lazy import function to avoid circular imports.
+    
+    Returns:
+        tuple: CustomClient, CustomClientManager, custom_client_manager
+    """
+    try:
+        from ..utils.custom_identifiers import CustomClient, CustomClientManager, get_custom_client_manager
+        return CustomClient, CustomClientManager, get_custom_client_manager()
+    except ImportError:
+        from ..utils.custom_identifiers import CustomClient, CustomClientManager, get_custom_client_manager
+        return CustomClient, CustomClientManager, get_custom_client_manager()
+
+
+# For module-level access, use properties that lazy load
+def __getattr__(name):
+    """
+    Dynamic attribute access for lazy loading of custom identifiers.
+    
+    Args:
+        name (str): Attribute name
+        
+    Returns:
+        Any: The requested attribute
+        
+    Raises:
+        AttributeError: If attribute is not found
+    """
+    if name == 'CustomClient':
+        CustomClient, _, _ = _lazy_import_custom_identifiers()
+        return CustomClient
+    elif name == 'CustomClientManager':
+        _, CustomClientManager, _ = _lazy_import_custom_identifiers()
+        return CustomClientManager
+    elif name == 'custom_client_manager':
+        _, _, custom_client_manager = _lazy_import_custom_identifiers()
+        return custom_client_manager
+    else:
+        raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
 
 __all__ = [
     # Core classes

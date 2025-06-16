@@ -11,13 +11,6 @@ import os
 import json
 from enum import Enum
 from typing import Dict, Optional, Any
-# Use try-except to handle both package and direct imports
-try:
-    # Try relative import first (when used as a package)
-    from ..profiles.profiles import ProfileLoader
-except ImportError:
-    # Fall back to direct import (when imported directly)
-    from profiles.profiles import ProfileLoader
 
 
 class CustomClient(Enum):
@@ -55,9 +48,35 @@ class CustomClientManager:
             data_dir (str): Path to the directory containing profile JSON files.
                           If None, uses the default 'data' directory.
         """
-        self.profile_loader = ProfileLoader(data_dir)
+        self.data_dir = data_dir
+        self.profile_loader = None
         self._custom_identifiers = {}
-        self._load_custom_identifiers()
+        # Delay initialization to avoid circular imports
+        self._initialized = False
+    
+    def _get_profile_loader(self):
+        """
+        Lazy initialization of ProfileLoader to avoid circular imports.
+        
+        Returns:
+            ProfileLoader: Instance of ProfileLoader
+        """
+        if self.profile_loader is None:
+            # Import here to avoid circular dependency
+            try:
+                from ..profiles.profiles import ProfileLoader
+            except ImportError:
+                from profiles.profiles import ProfileLoader
+            self.profile_loader = ProfileLoader(self.data_dir)
+        return self.profile_loader
+    
+    def _ensure_initialized(self):
+        """
+        Ensure the manager is properly initialized.
+        """
+        if not self._initialized:
+            self._load_custom_identifiers()
+            self._initialized = True
     
     def _load_custom_identifiers(self) -> None:
         """
@@ -68,15 +87,20 @@ class CustomClientManager:
             self._custom_identifiers[client.name] = client.value
         
         # Dynamically discover additional profiles
-        available_profiles = self.profile_loader.list_available_profiles()
-        
-        for profile_name in available_profiles:
-            # Generate identifier name from profile name
-            identifier_name = self._generate_identifier_name(profile_name)
+        try:
+            profile_loader = self._get_profile_loader()
+            available_profiles = profile_loader.list_available_profiles()
             
-            # Only add if not already defined in CustomClient enum
-            if identifier_name not in self._custom_identifiers:
-                self._custom_identifiers[identifier_name] = profile_name
+            for profile_name in available_profiles:
+                # Generate identifier name from profile name
+                identifier_name = self._generate_identifier_name(profile_name)
+                
+                # Only add if not already defined in CustomClient enum
+                if identifier_name not in self._custom_identifiers:
+                    self._custom_identifiers[identifier_name] = profile_name
+        except Exception as e:
+            # If we can't load profiles, just use the predefined ones
+            print(f"Warning: Could not load dynamic profiles: {e}")
     
     def _generate_identifier_name(self, profile_name: str) -> str:
         """
@@ -103,6 +127,7 @@ class CustomClientManager:
         Returns:
             Dict[str, str]: Dictionary mapping identifier names to profile names
         """
+        self._ensure_initialized()
         return self._custom_identifiers.copy()
     
     def is_custom_identifier(self, identifier_name: str) -> bool:
@@ -115,6 +140,7 @@ class CustomClientManager:
         Returns:
             bool: True if it's a custom identifier, False otherwise
         """
+        self._ensure_initialized()
         return identifier_name in self._custom_identifiers
     
     def get_profile_name(self, identifier_name: str) -> Optional[str]:
@@ -127,6 +153,7 @@ class CustomClientManager:
         Returns:
             Optional[str]: Profile name if found, None otherwise
         """
+        self._ensure_initialized()
         return self._custom_identifiers.get(identifier_name)
     
     def load_profile_for_identifier(self, identifier_name: str) -> Optional[Dict[str, Any]]:
@@ -139,10 +166,12 @@ class CustomClientManager:
         Returns:
             Optional[Dict[str, Any]]: Loaded profile session dictionary, None if not found
         """
+        self._ensure_initialized()
         profile_name = self.get_profile_name(identifier_name)
         if profile_name:
             try:
-                return self.profile_loader.load_profile(profile_name)
+                profile_loader = self._get_profile_loader()
+                return profile_loader.load_profile(profile_name)
             except Exception as e:
                 print(f"Error loading profile for identifier {identifier_name}: {e}")
                 return None
@@ -197,21 +226,28 @@ class CustomClientManager:
         Returns:
             bool: True if added successfully, False if profile doesn't exist
         """
-        if profile_name in self.profile_loader.list_available_profiles():
-            self._custom_identifiers[identifier_name] = profile_name
-            return True
+        self._ensure_initialized()
+        try:
+            profile_loader = self._get_profile_loader()
+            if profile_name in profile_loader.list_available_profiles():
+                self._custom_identifiers[identifier_name] = profile_name
+                return True
+        except Exception:
+            pass
         return False
     
     def print_available_identifiers(self) -> None:
         """
         Print all available custom identifiers in a formatted way.
         """
+        self._ensure_initialized()
         print("Available Custom Client Identifiers:")
         print("=" * 50)
         
         for identifier_name, profile_name in self._custom_identifiers.items():
             try:
-                profile_info = self.profile_loader.get_profile_info(profile_name)
+                profile_loader = self._get_profile_loader()
+                profile_info = profile_loader.get_profile_info(profile_name)
                 browser_type = profile_info.get('name', 'unknown').split('_')[0].title()
                 print(f"{identifier_name:<25} -> {profile_name}")
                 print(f"{'':>25}    Browser: {browser_type}")
@@ -221,8 +257,28 @@ class CustomClientManager:
                 print(f"{identifier_name:<25} -> {profile_name} (profile load error)")
 
 
-# Global instance for easy access
-custom_client_manager = CustomClientManager()
+# Create a global instance with lazy initialization
+_custom_client_manager = None
+
+def get_custom_client_manager():
+    """
+    Get the global CustomClientManager instance, creating it if necessary.
+    
+    Returns:
+        CustomClientManager: Global instance
+    """
+    global _custom_client_manager
+    if _custom_client_manager is None:
+        _custom_client_manager = CustomClientManager()
+    return _custom_client_manager
+
+# For backwards compatibility, create a module-level callable that acts like the instance
+def _get_global_manager():
+    """Get the global manager instance"""
+    return get_custom_client_manager()
+
+# Assign it to the module level for backwards compatibility
+custom_client_manager = _get_global_manager()
 
 
 def get_session_params(custom_client: CustomClient) -> Optional[Dict[str, Any]]:
@@ -235,7 +291,7 @@ def get_session_params(custom_client: CustomClient) -> Optional[Dict[str, Any]]:
     Returns:
         Optional[Dict[str, Any]]: Session parameters dictionary
     """
-    return custom_client_manager.get_session_params_for_identifier(custom_client.name)
+    return get_custom_client_manager().get_session_params_for_identifier(custom_client.name)
 
 
 def list_custom_identifiers() -> Dict[str, str]:
@@ -245,7 +301,7 @@ def list_custom_identifiers() -> Dict[str, str]:
     Returns:
         Dict[str, str]: Dictionary mapping identifier names to profile names
     """
-    return custom_client_manager.get_available_identifiers()
+    return get_custom_client_manager().get_available_identifiers()
 
 
 def is_custom_client(identifier_name: str) -> bool:
@@ -258,12 +314,12 @@ def is_custom_client(identifier_name: str) -> bool:
     Returns:
         bool: True if it's a custom identifier
     """
-    return custom_client_manager.is_custom_identifier(identifier_name)
+    return get_custom_client_manager().is_custom_identifier(identifier_name)
 
 
 # Example usage
 if __name__ == "__main__":
     # Print available identifiers
-    custom_client_manager.print_available_identifiers()
+    get_custom_client_manager().print_available_identifiers()
     
    
