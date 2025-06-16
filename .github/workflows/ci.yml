@@ -3,7 +3,13 @@ name: CI
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., 1.0.0)"
+        required: true
+        type: string
 
 jobs:
   build-and-test:
@@ -18,7 +24,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -36,14 +42,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Set version variables
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "version_name=Release v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.ref }}" >> $GITHUB_OUTPUT
+            echo "version_name=Release ${{ github.ref }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: ${{ steps.version.outputs.version_name }}
           draft: false
           prerelease: false
 
@@ -57,7 +74,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install pypi-publish dependencies
         run: |
