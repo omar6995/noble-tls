@@ -20,6 +20,13 @@ setup(
     long_description=readme,
     long_description_content_type="text/markdown",
     packages=find_packages(exclude=["tests"]),
+    include_package_data=True,
+    package_data={
+        "noble_tls.profiles": [
+            "browser_header_orders.json",
+            "data/*.json"
+        ]
+    },
     install_requires=["httpx", "distro", "requests"],
     classifiers=[
         "Environment :: Web Environment",

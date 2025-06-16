@@ -101,6 +101,8 @@ class CustomClientManager:
         except Exception as e:
             # If we can't load profiles, just use the predefined ones
             print(f"Warning: Could not load dynamic profiles: {e}")
+            print("This usually means the package data files were not installed correctly.")
+            print("Available identifiers will be limited to predefined ones only.")
     
     def _generate_identifier_name(self, profile_name: str) -> str:
         """

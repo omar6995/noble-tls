@@ -116,7 +116,18 @@ class ProfileLoader:
         """
         Load all JSON profile files from the data directory.
         """
+        if not os.path.exists(self.data_dir):
+            logger.error(f"Data directory does not exist: {self.data_dir}")
+            logger.error("This usually means the package was not installed with data files included.")
+            logger.error("Try reinstalling the package or check the installation method.")
+            return
+            
         json_files = glob.glob(os.path.join(self.data_dir, "*.json"))
+        
+        if not json_files:
+            logger.warning(f"No JSON profile files found in {self.data_dir}")
+            logger.warning("This usually means the package data files were not installed correctly.")
+            return
         
         for json_file in json_files:
             try:
