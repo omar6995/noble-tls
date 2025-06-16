@@ -11,12 +11,16 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build-and-test:
     runs-on: macos-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -55,15 +59,12 @@ jobs:
           fi
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          tag_name: ${{ steps.version.outputs.version }}
-          release_name: ${{ steps.version.outputs.version_name }}
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.version }}" \
+            --title "${{ steps.version.outputs.version_name }}" \
+            --notes "Release ${{ steps.version.outputs.version }}"
 
   build-and-publish:
     needs: release
