@@ -26,7 +26,7 @@ def auto_retry(retries: int):
                 except Exception as e:
                     attempt += 1
                     if attempt > retries:
-                        print(f">> Failed after {attempt} attempts with error: {e}")
+                        print(f">> Failed after {attempt} attempts with error: {e} using token: {GITHUB_TOKEN}")
                         raise e
                     await asyncio.sleep(0.1)
 
