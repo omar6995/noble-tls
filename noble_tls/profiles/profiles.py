@@ -240,7 +240,7 @@ class ProfileLoader:
                 for version in peet_versions:
                     # Handle versions with hex codes like "TLS_GREASE (0x6a6a)"
                     if "(" in version:
-                        print('GREASE inside supported_versions')
+                        
                         clean_version = version.split(" (")[0]
                     else:
                         clean_version = version
@@ -262,24 +262,22 @@ class ProfileLoader:
         """
         key_share_curves = []
         
-        # Extract from supported_groups extension
+        # Extract from key_share extension (not supported_groups)
         for ext in tls_data.get("extensions", []):
-            if ext.get("name") == "supported_groups (10)":
-                supported_groups = ext.get("supported_groups", [])
-                for group in supported_groups:
-                    # Convert format from "X25519 (29)" to "X25519"
-                    if "(" in group:
-                        curve_name = group.split(" (")[0]
-                    else:
-                        curve_name = group
-                    
-                    # Skip TLS_GREASE entries as they are dynamic
-                    #if curve_name == "TLS_GREASE":
-                        #continue
-                    
-                    # Convert to noble TLS format
-                    noble_curve = self.CURVE_MAP.get(curve_name, curve_name)
-                    key_share_curves.append(noble_curve)
+            if ext.get("name") == "key_share (51)":
+                shared_keys = ext.get("shared_keys", [])
+                for key_dict in shared_keys:
+                    # Each shared_keys entry is a dict with curve name as key
+                    for curve_name_with_code in key_dict.keys():
+                        # Convert format from "X25519 (29)" to "X25519"
+                        if "(" in curve_name_with_code:
+                            curve_name = curve_name_with_code.split(" (")[0]
+                        else:
+                            curve_name = curve_name_with_code
+                        
+                        # Convert to noble TLS format
+                        noble_curve = self.CURVE_MAP.get(curve_name, curve_name)
+                        key_share_curves.append(noble_curve)
         
         return key_share_curves
     
