@@ -1,8 +1,8 @@
 {
   "chrome": [
     ":method",
-    ":scheme",
     ":authority",
+    ":scheme",
     ":path",
     "sec-ch-ua",
     "sec-ch-ua-mobile",
