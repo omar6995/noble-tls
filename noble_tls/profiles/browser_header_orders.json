@@ -34,6 +34,7 @@
     "accept-language",
     "priority",
     "accept-encoding",
+    "sec-ch-ua-full-version",
     "cookie"
   ],
   "safari_ios": [
@@ -60,6 +61,7 @@
     "cache-control",
     "sec-ch-ua",
     "sec-ch-ua-mobile",
+    "sec-ch-ua-full-version",
     "sec-ch-ua-platform",
     "upgrade-insecure-requests",
     "user-agent",
