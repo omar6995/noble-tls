@@ -90,8 +90,7 @@ def create_session(
         if custom_params:
             # Merge custom parameters with any provided kwargs
             merged_params = {**custom_params, **kwargs}
-            print('merged_params are : ')
-            print(json.dumps(merged_params, indent=4))
+           
             return Session(**merged_params)
         else:
             raise ValueError(f"Failed to load profile for custom client {client.name}")
