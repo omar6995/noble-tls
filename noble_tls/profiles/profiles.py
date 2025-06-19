@@ -28,9 +28,13 @@ class ProfileLoader:
         "ecdsa_sha1": "ECDSAWithSHA1",
         
         # RSA PSS algorithms
-        "rsa_pss_rsae_sha256": "PSSWithSHA256",
-        "rsa_pss_rsae_sha384": "PSSWithSHA384",
-        "rsa_pss_rsae_sha512": "PSSWithSHA512",
+        "rsa_pss_rsae_sha256": "804",
+        "rsa_pss_rsae_sha384": "805",
+        "rsa_pss_rsae_sha512": "806",
+        
+        "rsa_pss_pss_sha256": "809",
+        "rsa_pss_pss_sha384": "80a",
+        "rsa_pss_pss_sha512": "80b",
         
         # RSA PKCS1 algorithms
         "rsa_pkcs1_sha256": "PKCS1WithSHA256",
@@ -171,7 +175,11 @@ class ProfileLoader:
                     if " = " in setting:
                         key, value = setting.split(" = ")
                         # Convert to noble TLS format
-                        noble_key = self.H2_SETTINGS_MAP.get(key, key)
+                        if key in self.H2_SETTINGS_MAP:
+                            noble_key = self.H2_SETTINGS_MAP[key]
+                        else:
+                            logger.warning(f"Unknown HTTP/2 setting encountered: '{key}'. This may cause issues with HTTP/2 fingerprinting.")
+                            noble_key = key
                         h2_settings[noble_key] = int(value)
         
         return h2_settings
@@ -196,7 +204,11 @@ class ProfileLoader:
                     if " = " in setting:
                         key, _ = setting.split(" = ")
                         # Convert to noble TLS format
-                        noble_key = self.H2_SETTINGS_MAP.get(key, key)
+                        if key in self.H2_SETTINGS_MAP:
+                            noble_key = self.H2_SETTINGS_MAP[key]
+                        else:
+                            logger.warning(f"Unknown HTTP/2 setting encountered: '{key}'. This may cause issues with HTTP/2 fingerprinting.")
+                            noble_key = key
                         settings_order.append(noble_key)
         
         return settings_order
@@ -217,8 +229,23 @@ class ProfileLoader:
                 # Convert to noble TLS format
                 noble_algorithms = []
                 for algo in peet_algorithms:
-                    noble_algo = self.SIGNATURE_ALGORITHM_MAP.get(algo, algo)
-                    noble_algorithms.append(noble_algo)
+                    # If it's a hex value, strip 0x prefix and pass through directly
+                    if algo.startswith("0x"):
+                        # Remove 0x prefix and pass the hex value
+                        hex_value = algo[2:]
+                        noble_algorithms.append(hex_value)
+                    elif len(algo) <= 4 and all(c in "0123456789abcdefABCDEF" for c in algo):
+                        # Already a hex value without 0x prefix
+                        noble_algorithms.append(algo)
+                    elif algo in self.SIGNATURE_ALGORITHM_MAP:
+                        # Map known string names
+                        noble_algo = self.SIGNATURE_ALGORITHM_MAP[algo]
+                        noble_algorithms.append(noble_algo)
+                    else:
+                        # Unknown value that's neither hex nor in our mapping
+                        logger.warning(f"Unknown signature algorithm encountered: '{algo}'. This may cause issues with TLS fingerprinting.")
+                        # Still add it in case the API can handle it
+                        noble_algorithms.append(algo)
                 return noble_algorithms
         return []
     
@@ -240,13 +267,27 @@ class ProfileLoader:
                 for version in peet_versions:
                     # Handle versions with hex codes like "TLS_GREASE (0x6a6a)"
                     if "(" in version:
-                        
                         clean_version = version.split(" (")[0]
                     else:
                         clean_version = version
                     
-                    noble_version = self.VERSION_MAP.get(clean_version, clean_version)
-                    noble_versions.append(noble_version)
+                    # If it's a hex value, strip 0x prefix and pass through directly
+                    if clean_version.startswith("0x"):
+                        # Remove 0x prefix and pass the hex value
+                        hex_value = clean_version[2:]
+                        noble_versions.append(hex_value)
+                    elif len(clean_version) <= 4 and all(c in "0123456789abcdefABCDEF" for c in clean_version):
+                        # Already a hex value without 0x prefix
+                        noble_versions.append(clean_version)
+                    elif clean_version in self.VERSION_MAP:
+                        # Map known version names
+                        noble_version = self.VERSION_MAP[clean_version]
+                        noble_versions.append(noble_version)
+                    else:
+                        # Unknown version that's neither hex nor in our mapping
+                        logger.warning(f"Unknown TLS version encountered: '{clean_version}'. This may cause issues with TLS fingerprinting.")
+                        # Still add it in case the API can handle it
+                        noble_versions.append(clean_version)
                 return noble_versions
         return []
     
@@ -275,9 +316,23 @@ class ProfileLoader:
                         else:
                             curve_name = curve_name_with_code
                         
-                        # Convert to noble TLS format
-                        noble_curve = self.CURVE_MAP.get(curve_name, curve_name)
-                        key_share_curves.append(noble_curve)
+                        # If it's a hex value, strip 0x prefix and pass through directly
+                        if curve_name.startswith("0x"):
+                            # Remove 0x prefix and pass the hex value
+                            hex_value = curve_name[2:]
+                            key_share_curves.append(hex_value)
+                        elif len(curve_name) <= 4 and all(c in "0123456789abcdefABCDEF" for c in curve_name):
+                            # Already a hex value without 0x prefix
+                            key_share_curves.append(curve_name)
+                        elif curve_name in self.CURVE_MAP:
+                            # Map known curve names
+                            noble_curve = self.CURVE_MAP[curve_name]
+                            key_share_curves.append(noble_curve)
+                        else:
+                            # Unknown curve that's neither hex nor in our mapping
+                            logger.warning(f"Unknown curve encountered: '{curve_name}'. This may cause issues with TLS fingerprinting.")
+                            # Still add it in case the API can handle it
+                            key_share_curves.append(curve_name)
         
         return key_share_curves
     
@@ -462,7 +517,7 @@ class ProfileLoader:
             "tls_version_record": tls_data.get("tls_version_record", ""),
             "tls_version_negotiated": tls_data.get("tls_version_negotiated", "")
         }
-        
+       
         return session_dict
     
     def list_available_profiles(self) -> List[str]:

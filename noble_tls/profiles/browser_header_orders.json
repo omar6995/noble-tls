@@ -54,8 +54,8 @@
   ],
   "edge": [
     ":method",
-    ":scheme",
     ":authority",
+    ":scheme",
     ":path",
     "cache-control",
     "sec-ch-ua",

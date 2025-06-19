@@ -6,6 +6,7 @@ This module provides factory functions to create Session instances using
 either built-in Client identifiers or custom CustomClient identifiers.
 """
 
+import json
 from typing import Optional, Union, Any
 import sys
 import os
@@ -89,6 +90,8 @@ def create_session(
         if custom_params:
             # Merge custom parameters with any provided kwargs
             merged_params = {**custom_params, **kwargs}
+            print('merged_params are : ')
+            print(json.dumps(merged_params, indent=4))
             return Session(**merged_params)
         else:
             raise ValueError(f"Failed to load profile for custom client {client.name}")
@@ -99,6 +102,7 @@ def create_session(
             custom_params = custom_client_manager.get_session_params_for_identifier(client)
             if custom_params:
                 merged_params = {**custom_params, **kwargs}
+                
                 return Session(**merged_params)
             else:
                 raise ValueError(f"Failed to load profile for custom client {client}")

@@ -45,7 +45,7 @@ async def test_chrome_137_profile():
         profile_loader = ProfileLoader()
         
         # Load the chrome profile by name (Chrome has complete TLS data, Edge profile is incomplete)
-        profile_name = "chrome_137_windows"
+        profile_name = "edge_137_windows"
         session_params = profile_loader.load_profile(profile_name)
         print('-------------------------------- Session Params --------------------------------')
         print(session_params)
@@ -58,7 +58,7 @@ async def test_chrome_137_profile():
         #valid_session_params['client'] = Client.CHROME_133
         
         #session = Session(**valid_session_params)
-        session = create_session(CustomClient.CHROME_137)
+        session = create_session(CustomClient.EDGE_137)
         # Set User-Agent from profile
         if session_params.get('user_agent'):
             session.headers['User-Agent'] = session_params['user_agent']
@@ -151,7 +151,7 @@ def main():
                 print(f"  TLS Version: {tls_info.get('tls_version_negotiated', 'N/A')}")
                 print(f"  User Agent Match: {result.get('user_agent', 'N/A')}")
                 print(f"  Peetprint_hash: {result.get('peetprint_hash', 'N/A')}")
-                print(result)
+                print(json.dumps(result, indent=2))
         else:
             print(f"\n❌ Test failed - no data collected")
             
