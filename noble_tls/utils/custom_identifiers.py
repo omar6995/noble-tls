@@ -19,7 +19,7 @@ class CustomClient(Enum):
     These identifiers automatically load the corresponding profile when used.
     """
     # Chrome profiles
-    CHROME_137 = "chrome_137_windows"
+    CHROME_137 = "chrome_137_macos"
     EDGE_137 = "edge_137_windows"
     SAFARI_18_3_IOS = "safari_18.3_ios"
     SAFARI_18_5_IOS = "safari_18.5_ios"

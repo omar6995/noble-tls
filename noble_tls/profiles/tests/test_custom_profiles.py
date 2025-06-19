@@ -58,7 +58,7 @@ async def test_chrome_137_profile():
         #valid_session_params['client'] = Client.CHROME_133
         
         #session = Session(**valid_session_params)
-        session = create_session(CustomClient.EDGE_137)
+        session = create_session(CustomClient.CHROME_137)
         # Set User-Agent from profile
         if session_params.get('user_agent'):
             session.headers['User-Agent'] = session_params['user_agent']
