@@ -45,7 +45,7 @@ async def test_chrome_137_profile():
         profile_loader = ProfileLoader()
         
         # Load the chrome profile by name (Chrome has complete TLS data, Edge profile is incomplete)
-        profile_name = "edge_137_windows"
+        profile_name = "chrome_137_macos"
         session_params = profile_loader.load_profile(profile_name)
         print('-------------------------------- Session Params --------------------------------')
         print(session_params)
