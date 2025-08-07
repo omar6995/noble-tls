@@ -25,6 +25,10 @@ setup(
         "noble_tls.profiles": [
             "browser_header_orders.json",
             "data/*.json"
+        ],
+        # Include native assets for AWS mode
+        "noble_tls": [
+            "data/*"
         ]
     },
     install_requires=["httpx", "distro", "requests"],
