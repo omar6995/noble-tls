@@ -111,6 +111,26 @@ _library = None
 _request_func = None
 _free_memory_func = None
 
+def detect_aws_mode() -> bool:
+    """
+    Detect whether the current runtime environment appears to be AWS Lambda or
+    a restricted environment based on environment variables.
+
+    Parameters:
+        None
+
+    Returns:
+        bool: True if the environment suggests AWS/restricted mode; False otherwise.
+    """
+    if os.environ.get("NOBLE_TLS_AWS"):
+        return True
+    if os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        return True
+    exec_env = os.environ.get("AWS_EXECUTION_ENV", "")
+    if exec_env.startswith("AWS_Lambda"):
+        return True
+    return False
+
 def get_library(is_aws=False):
     """
     Get the initialized library, initializing it if necessary.
@@ -151,7 +171,28 @@ def get_free_memory_func(is_aws=False):
     get_library(is_aws)
     return _free_memory_func
 
-# Initialize with default behavior for backward compatibility
-library = get_library()
-request = get_request_func()
-free_memory = get_free_memory_func()
+# Backward compatibility shims (lazy initialization)
+def request(payload: bytes) -> ctypes.c_char_p:
+    """
+    Backward-compatible request entrypoint.
+
+    Parameters:
+        payload (bytes): JSON-encoded request payload expected by the native library.
+
+    Returns:
+        ctypes.c_char_p: Pointer to a C string with the JSON-encoded response.
+    """
+    return get_request_func(detect_aws_mode())(payload)
+
+
+def free_memory(pointer_id: bytes) -> ctypes.c_char_p:
+    """
+    Backward-compatible freeMemory entrypoint.
+
+    Parameters:
+        pointer_id (bytes): Identifier of the allocated memory returned by the native library.
+
+    Returns:
+        ctypes.c_char_p: Return value from the native freeMemory call.
+    """
+    return get_free_memory_func(detect_aws_mode())(pointer_id)
