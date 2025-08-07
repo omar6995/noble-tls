@@ -6,7 +6,8 @@ import urllib.parse
 import base64
 import ctypes
 
-from .c.cffi import get_request_func, get_free_memory_func
+# Import as module to allow tests to patch noble_tls.c.cffi.get_request_func/free_memory_func reliably
+from .c import cffi as _cffi
 from .cookies import cookiejar_from_dict, merge_cookies, extract_cookies_to_jar
 from .exceptions.exceptions import TLSClientException
 from .utils.structures import CaseInsensitiveDict
@@ -456,8 +457,8 @@ class Session:
 
             loop = asyncio.get_event_loop()
             # Get the appropriate request and free memory functions based on AWS flag
-            request_func = get_request_func(self.isAws)
-            free_memory_func = get_free_memory_func(self.isAws)
+            request_func = _cffi.get_request_func(self.isAws)
+            free_memory_func = _cffi.get_free_memory_func(self.isAws)
             
             # this is a pointer to the response
             response = await loop.run_in_executor(None, request_func, dumps(request_payload).encode('utf-8'))

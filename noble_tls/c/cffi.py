@@ -12,7 +12,11 @@ async def check_and_download_dependencies():
     Check if the dependencies folder is empty and download necessary files if it is.
     """
     root_directory = root_dir()
-    contains_anything = [file for file in os.listdir(f'{root_directory}/dependencies') if not file.startswith('.')]
+    dependencies_dir = f'{root_directory}/dependencies'
+    # Ensure directory exists before listing to avoid FileNotFoundError in CI
+    if not os.path.exists(dependencies_dir):
+        os.makedirs(dependencies_dir, exist_ok=True)
+    contains_anything = [file for file in os.listdir(dependencies_dir) if not file.startswith('.')]
     if len(contains_anything) == 0:
         print(">> Dependencies folder is empty. Downloading the latest TLS release...")
         await download_if_necessary()
@@ -60,9 +64,10 @@ def load_asset(is_aws=False):
         return asset_name, True  # Return tuple indicating AWS mode
     
     # Original logic for non-AWS usage
-    # Check if dependencies folder exists
-    if not os.path.exists(f'{root_dir()}/dependencies'):
-        os.mkdir(f'{root_dir()}/dependencies')
+    # Check if dependencies folder exists; create it to maintain previous behavior
+    dependencies_dir = f'{root_dir()}/dependencies'
+    if not os.path.exists(dependencies_dir):
+        os.makedirs(dependencies_dir, exist_ok=True)
 
     current_asset, current_version = read_version_info()
     if not current_asset or not current_version:
@@ -71,7 +76,7 @@ def load_asset(is_aws=False):
         print(f">> Downloaded asset {current_asset} for version {current_version}.")
 
     asset_name = generate_asset_name(version=current_version)
-    asset_path = f'{root_dir()}/dependencies/{asset_name}'
+    asset_path = f'{dependencies_dir}/{asset_name}'
     if not os.path.exists(asset_path):
         raise TLSClientException(f"Unable to find asset {asset_name} for version {current_version}.")
 
