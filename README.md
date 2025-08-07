@@ -186,6 +186,38 @@ async def main():
     print(res.text)
 ```
 
+Example 3 - AWS Mode:
+
+```python
+import noble_tls
+
+
+async def main():
+    # For AWS Lambda or restricted environments where downloads are not allowed
+    # This loads .so/.dll/.dylib files from the data directory instead of downloading
+    session = noble_tls.Session(
+        client=noble_tls.Client.CHROME_131,
+        isAws=True  # Enable AWS mode
+    )
+
+    res = await session.get("https://www.example.com/")
+    print(res.text)
+```
+
+# AWS Lambda / Restricted Environments
+
+If you're deploying to AWS Lambda, Docker containers, or environments where internet downloads are restricted, you can use the `isAws=True` parameter. This will load the TLS client libraries from the `noble_tls/data/` directory instead of attempting to download them.
+
+```python
+session = noble_tls.Session(isAws=True)
+```
+
+This is particularly useful for:
+- AWS Lambda functions
+- Docker containers with no internet access
+- Corporate environments with restricted downloads
+- Offline environments
+
 # Pyinstaller / Pyarmor
 **If you want to pack the library with Pyinstaller or Pyarmor, make sure to add this to your command:**
 

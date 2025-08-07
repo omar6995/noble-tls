@@ -6,7 +6,7 @@ import urllib.parse
 import base64
 import ctypes
 
-from .c.cffi import request, free_memory
+from .c.cffi import get_request_func, get_free_memory_func
 from .cookies import cookiejar_from_dict, merge_cookies, extract_cookies_to_jar
 from .exceptions.exceptions import TLSClientException
 from .utils.structures import CaseInsensitiveDict
@@ -39,10 +39,40 @@ class Session:
             catch_panics: Optional = False,
             debug: Optional = False,
             transportOptions: Optional[dict] = None,
-            connectHeaders: Optional[dict] = None
+            connectHeaders: Optional[dict] = None,
+            isAws: Optional[bool] = False
     ) -> None:
+        """
+        Initialize a Noble TLS Session.
+        
+        Args:
+            client: TLS client identifier
+            ja3_string: JA3 fingerprint string  
+            h2_settings: HTTP/2 settings dictionary
+            h2_settings_order: Order of HTTP/2 settings
+            supported_signature_algorithms: List of supported signature algorithms
+            supported_delegated_credentials_algorithms: List of supported delegated credentials algorithms
+            supported_versions: List of supported TLS versions
+            key_share_curves: List of key share curves
+            cert_compression_algo: Certificate compression algorithm
+            additional_decode: Additional decode algorithm
+            pseudo_header_order: Order of pseudo headers
+            connection_flow: Connection flow value
+            priority_frames: Priority frames configuration
+            header_order: Order of headers
+            header_priority: Header priority configuration
+            random_tls_extension_order: Whether to randomize TLS extension order
+            force_http1: Whether to force HTTP/1.1
+            catch_panics: Whether to catch Go panics
+            debug: Whether to enable debug mode
+            transportOptions: Transport options configuration
+            connectHeaders: Connect headers configuration
+            isAws: If True, load .so/.dll/.dylib files from data directory instead of downloading. 
+                   Useful for AWS Lambda or environments where downloads are restricted.
+        """
         self.client_identifier = client.value if client else None
         self._session_id = random_session_id()
+        self.isAws = isAws  # Store the AWS flag for use in requests
         # --- Standard Settings ----------------------------------------------------------------------------------------
 
         # Case-insensitive dictionary of headers, send on each request
@@ -425,8 +455,12 @@ class Session:
                 request_payload["withRandomTLSExtensionOrder"] = self.random_tls_extension_order
 
             loop = asyncio.get_event_loop()
+            # Get the appropriate request and free memory functions based on AWS flag
+            request_func = get_request_func(self.isAws)
+            free_memory_func = get_free_memory_func(self.isAws)
+            
             # this is a pointer to the response
-            response = await loop.run_in_executor(None, request, dumps(request_payload).encode('utf-8'))
+            response = await loop.run_in_executor(None, request_func, dumps(request_payload).encode('utf-8'))
 
             # dereference the pointer to a byte array
             response_bytes = ctypes.string_at(response)
@@ -435,7 +469,7 @@ class Session:
             # convert response string to json
             response_object = loads(response_string)
             # free the memory
-            await loop.run_in_executor(None, free_memory, response_object['id'].encode('utf-8'))
+            await loop.run_in_executor(None, free_memory_func, response_object['id'].encode('utf-8'))
 
             # --- Response -------------------------------------------------------------------------------------------------
             # Error handling

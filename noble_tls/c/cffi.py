@@ -36,11 +36,30 @@ def run_async_task(task):
             loop.run_until_complete(task)
 
 
-def load_asset():
+def load_asset(is_aws=False):
     """
     Load the asset and return its name, download if necessary.
+    :param is_aws: If True, load asset from data directory instead of downloading
     :return: Name of the asset.
     """
+    if is_aws:
+        # Load from data directory for AWS usage
+        data_dir = f'{root_dir()}/data'
+        if not os.path.exists(data_dir):
+            raise TLSClientException(f"Data directory {data_dir} does not exist for AWS usage.")
+        
+        # Find .so, .dll, or .dylib files in data directory
+        available_files = [f for f in os.listdir(data_dir) if f.endswith(('.so', '.dll', '.dylib'))]
+        if not available_files:
+            raise TLSClientException(f"No compatible asset files found in {data_dir} for AWS usage.")
+        
+        # Use the first available file
+        asset_name = available_files[0]
+        asset_path = f'{data_dir}/{asset_name}'
+        print(f">> Using AWS asset {asset_name} from data directory.")
+        return asset_name, True  # Return tuple indicating AWS mode
+    
+    # Original logic for non-AWS usage
     # Check if dependencies folder exists
     if not os.path.exists(f'{root_dir()}/dependencies'):
         os.mkdir(f'{root_dir()}/dependencies')
@@ -56,17 +75,26 @@ def load_asset():
     if not os.path.exists(asset_path):
         raise TLSClientException(f"Unable to find asset {asset_name} for version {current_version}.")
 
-    return asset_name
+    return asset_name, False  # Return tuple indicating non-AWS mode
 
 
-def initialize_library():
+def initialize_library(is_aws=False):
     """
     Initialize and return the library.
+    :param is_aws: If True, load asset from data directory instead of downloading
     :return: Loaded library object.
     """
     try:
-        asset_name = load_asset()
-        library = ctypes.cdll.LoadLibrary(f"{root_dir()}/dependencies/{asset_name}")
+        asset_name, is_aws_mode = load_asset(is_aws)
+        
+        if is_aws_mode:
+            # Load from data directory
+            library_path = f"{root_dir()}/data/{asset_name}"
+        else:
+            # Load from dependencies directory (original behavior)
+            library_path = f"{root_dir()}/dependencies/{asset_name}"
+        
+        library = ctypes.cdll.LoadLibrary(library_path)
         return library
     except TLSClientException as e:
         print(f">> Failed to load the TLS Client asset: {e}")
@@ -78,13 +106,52 @@ def initialize_library():
         exit(1)
 
 
-library = initialize_library()
+# Global variables to store library and functions
+_library = None
+_request_func = None
+_free_memory_func = None
 
-# Define the request function from the shared package
-request = library.request
-request.argtypes = [ctypes.c_char_p]
-request.restype = ctypes.c_char_p
+def get_library(is_aws=False):
+    """
+    Get the initialized library, initializing it if necessary.
+    :param is_aws: If True, load asset from data directory instead of downloading
+    :return: Loaded library object.
+    """
+    global _library, _request_func, _free_memory_func
+    
+    if _library is None or is_aws:
+        _library = initialize_library(is_aws)
+        
+        # Define the request function from the shared package
+        _request_func = _library.request
+        _request_func.argtypes = [ctypes.c_char_p]
+        _request_func.restype = ctypes.c_char_p
 
-free_memory = library.freeMemory
-free_memory.argtypes = [ctypes.c_char_p]
-free_memory.restype = ctypes.c_char_p
+        _free_memory_func = _library.freeMemory
+        _free_memory_func.argtypes = [ctypes.c_char_p]
+        _free_memory_func.restype = ctypes.c_char_p
+    
+    return _library
+
+def get_request_func(is_aws=False):
+    """
+    Get the request function, initializing library if necessary.
+    :param is_aws: If True, load asset from data directory instead of downloading
+    :return: Request function.
+    """
+    get_library(is_aws)
+    return _request_func
+
+def get_free_memory_func(is_aws=False):
+    """
+    Get the free memory function, initializing library if necessary.
+    :param is_aws: If True, load asset from data directory instead of downloading
+    :return: Free memory function.
+    """
+    get_library(is_aws)
+    return _free_memory_func
+
+# Initialize with default behavior for backward compatibility
+library = get_library()
+request = get_request_func()
+free_memory = get_free_memory_func()
