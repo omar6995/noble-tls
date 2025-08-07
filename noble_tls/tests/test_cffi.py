@@ -39,15 +39,39 @@ def test_load_asset(mocker):
     mocker.patch('noble_tls.c.cffi.generate_asset_name', return_value='some_asset')
 
     # Call the load_asset function
-    asset_name = load_asset()
+    asset_name, is_aws_mode = load_asset()
 
-    # Assert the returned asset name is 'some_asset'
+    # Assert the returned asset name is 'some_asset' and not in AWS mode
     assert asset_name == 'some_asset', "Asset name should match the mocked value"
+    assert is_aws_mode == False, "Should not be in AWS mode for normal usage"
 
 
 def test_initialize_library(mocker):
-    mocker.patch('noble_tls.c.cffi.load_asset', return_value='some_asset')  # Mocking load_asset to return a dummy asset name
+    mocker.patch('noble_tls.c.cffi.load_asset', return_value=('some_asset', False))  # Mocking load_asset to return a tuple
     mocker.patch('ctypes.cdll.LoadLibrary',
                  return_value=MagicMock())  # Mocking LoadLibrary to return a MagicMock object
     library = initialize_library()
     assert library is not None, "Library should be initialized successfully"
+
+
+def test_load_asset_aws_mode(mocker):
+    # Mock the os.path.exists function to simulate the data directory existence
+    mocker.patch('os.path.exists', return_value=True)
+    
+    # Mock os.listdir to return a list with a .so file
+    mocker.patch('os.listdir', return_value=['tls-client-xgo-1.11.0-linux-amd64.so'])
+
+    # Call the load_asset function with AWS mode
+    asset_name, is_aws_mode = load_asset(is_aws=True)
+
+    # Assert the returned asset name and AWS mode
+    assert asset_name == 'tls-client-xgo-1.11.0-linux-amd64.so', "Asset name should match the available file"
+    assert is_aws_mode == True, "Should be in AWS mode"
+
+
+def test_initialize_library_aws_mode(mocker):
+    mocker.patch('noble_tls.c.cffi.load_asset', return_value=('some_aws_asset.so', True))  # Mocking load_asset to return AWS tuple
+    mocker.patch('ctypes.cdll.LoadLibrary',
+                 return_value=MagicMock())  # Mocking LoadLibrary to return a MagicMock object
+    library = initialize_library(is_aws=True)
+    assert library is not None, "Library should be initialized successfully in AWS mode"

@@ -16,6 +16,15 @@ async def test_session_initialization():
     session = Session()
     assert session.timeout_seconds == 30, "Default timeout should be 30 seconds"
     assert isinstance(session.headers, CaseInsensitiveDict), "Headers should be a CaseInsensitiveDict"
+    assert session.isAws == False, "Default isAws should be False"
+
+
+@pytest.mark.asyncio
+async def test_session_initialization_aws():
+    session = Session(isAws=True)
+    assert session.timeout_seconds == 30, "Default timeout should be 30 seconds"
+    assert isinstance(session.headers, CaseInsensitiveDict), "Headers should be a CaseInsensitiveDict"
+    assert session.isAws == True, "isAws should be True when specified"
 
 
 @pytest.mark.asyncio
@@ -23,7 +32,8 @@ async def test_session_execute_request(mocker):
     # Mock external calls
     mocker.patch('ctypes.string_at', return_value=b'{"status": 200, "body": "OK", "headers": {}, "id": "mock_id"}')
     mocker.patch('ctypes.cdll.LoadLibrary')
-    mocker.patch('noble_tls.sessions.free_memory')
+    mocker.patch('noble_tls.c.cffi.get_request_func', return_value=MagicMock())
+    mocker.patch('noble_tls.c.cffi.get_free_memory_func', return_value=MagicMock())
 
     session = Session()
 
