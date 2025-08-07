@@ -3,7 +3,8 @@ import os
 import ctypes
 
 from noble_tls.exceptions.exceptions import TLSClientException
-from noble_tls.updater.file_fetch import read_version_info, download_if_necessary
+import noble_tls.updater.file_fetch as file_fetch
+download_if_necessary = file_fetch.download_if_necessary
 from noble_tls.utils.asset import generate_asset_name, root_dir
 
 
@@ -69,10 +70,10 @@ def load_asset(is_aws=False):
     if not os.path.exists(dependencies_dir):
         os.makedirs(dependencies_dir, exist_ok=True)
 
-    current_asset, current_version = read_version_info()
+    current_asset, current_version = file_fetch.read_version_info()
     if not current_asset or not current_version:
         run_async_task(check_and_download_dependencies())
-        current_asset, current_version = read_version_info()
+        current_asset, current_version = file_fetch.read_version_info()
         print(f">> Downloaded asset {current_asset} for version {current_version}.")
 
     asset_name = generate_asset_name(version=current_version)
